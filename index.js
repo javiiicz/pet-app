@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const { v4: uuidv4 } = require('uuid');
+
 require("dotenv").config();
 
 const app = express();
@@ -15,6 +17,7 @@ let pets = [
         type: "dino",
         age: 65,
         description: "Age in billions of years",
+        adopted: true
     },
     {
         id: 2,
@@ -22,6 +25,7 @@ let pets = [
         type: "dog",
         age: 4,
         description: "Do not let him outside",
+        adopted: false
     },
     {
         id: 3,
@@ -29,6 +33,7 @@ let pets = [
         type: "cat",
         age: 6,
         description: "Let her outside",
+        adopted: false
     },
 ];
 
@@ -60,6 +65,20 @@ app.get("/pets/:id", async (req, res) => {
     } else {
         res.json(pet)
     }
+})
+
+app.post("/pets", (req, res) => {
+    let body = req.body;
+    let newPet = {
+        id: uuidv4(),
+        name: body.name,
+        type: body.type,
+        age: body.age,
+        description: body.description,
+        adopted: body.adopted
+    }
+    pets.push(newPet)
+    res.json(newPet)
 })
 
 app.get("/hello-world", (req, res) => {
