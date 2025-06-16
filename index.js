@@ -55,19 +55,19 @@ app.get("/pets", (req, res) => {
     res.json(petList);
 });
 
-app.get("/pets/:id", async (req, res) => {
+app.get("/pets/:id", async (req, res, next) => {
     const id = req.params.id;
     const pet = pets.find((x) => x.id == id);
     console.log(pet);
 
     if (!pet) {
-        res.status(404).send("Pet not found");
+        next({message: "The pet with the specified ID does not exist", status: 404})
     } else {
         res.json(pet);
     }
 });
 
-app.post("/pets", (req, res) => {
+app.post("/pets", (req, res, next) => {
     let body = req.body;
     let newPet = {
         id: uuidv4(),
@@ -77,6 +77,10 @@ app.post("/pets", (req, res) => {
         description: body.description,
         adopted: body.adopted,
     };
+    if (newPet.name === undefined ||  newPet.type === undefined || newPet.age === undefined || newPet.adopted === undefined) {
+        next({message: "The new pet is missing a name, type, age, or adopted state", status: 400})
+        return
+    }
     pets.push(newPet);
     res.json(newPet);
 });
@@ -92,9 +96,13 @@ app.put("/pets/:id", (req, res) => {
         description: body.description,
         adopted: body.adopted,
     };
+    if (newPet.name === undefined ||  newPet.type === undefined || newPet.age === undefined || newPet.adopted === undefined) {
+        next({message: "The new pet is missing a name, type, age, or adopted state", status: 400})
+        return
+    }
     let oldIndex = pets.findIndex((x) => x.id == id);
     if (oldIndex < 0) {
-        res.status(404).send("Pet not found");
+        next({message: "The pet with the specified ID does not exist", status: 404})
     } else {
         pets[oldIndex] = newPet;
         res.json(newPet);
@@ -105,7 +113,7 @@ app.delete("/pets/:id", (req, res) => {
     const id = req.params.id;
     let oldIndex = pets.findIndex((x) => x.id == id);
     if (oldIndex < 0) {
-        res.status(404).send("Pet not found");
+        next({message: "The pet with the specified ID does not exist", status: 404})
     } else {
         pets.splice(oldIndex, 1)
         res.json({deleted: true});
@@ -120,6 +128,13 @@ app.get("/hello-world", (req, res) => {
 app.get("/hello-pet", (req, res) => {
     res.send("Hello, Pet!");
 });
+
+//error handling
+app.use((err, req, res, next) => {
+    const {message, status = 500} = err
+    console.log(message)
+    res.status(status).json({message}) // only for dev
+})
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
