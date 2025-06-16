@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 require("dotenv").config();
 
@@ -17,7 +17,7 @@ let pets = [
         type: "dino",
         age: 65,
         description: "Age in billions of years",
-        adopted: true
+        adopted: true,
     },
     {
         id: 2,
@@ -25,7 +25,7 @@ let pets = [
         type: "dog",
         age: 4,
         description: "Do not let him outside",
-        adopted: false
+        adopted: false,
     },
     {
         id: 3,
@@ -33,7 +33,7 @@ let pets = [
         type: "cat",
         age: 6,
         description: "Let her outside",
-        adopted: false
+        adopted: false,
     },
 ];
 
@@ -51,21 +51,21 @@ app.get("/", (req, res) => {
 });
 
 app.get("/pets", (req, res) => {
-    let petList = pets
-    res.json(petList)
-})
+    let petList = pets;
+    res.json(petList);
+});
 
 app.get("/pets/:id", async (req, res) => {
-    const id = req.params.id
-    const pet = pets.find(x => x.id == id)
-    console.log(pet)
-    
+    const id = req.params.id;
+    const pet = pets.find((x) => x.id == id);
+    console.log(pet);
+
     if (!pet) {
-        res.status(404).send("Pet not found")
+        res.status(404).send("Pet not found");
     } else {
-        res.json(pet)
+        res.json(pet);
     }
-})
+});
 
 app.post("/pets", (req, res) => {
     let body = req.body;
@@ -75,31 +75,43 @@ app.post("/pets", (req, res) => {
         type: body.type,
         age: body.age,
         description: body.description,
-        adopted: body.adopted
-    }
-    pets.push(newPet)
-    res.json(newPet)
-})
+        adopted: body.adopted,
+    };
+    pets.push(newPet);
+    res.json(newPet);
+});
 
 app.put("/pets/:id", (req, res) => {
-    const id = req.params.id
-    let body = req.body
+    const id = req.params.id;
+    let body = req.body;
     let newPet = {
         id: uuidv4(),
         name: body.name,
         type: body.type,
         age: body.age,
         description: body.description,
-        adopted: body.adopted
-    }
-    let oldIndex = pets.findIndex(x => x.id == id)
+        adopted: body.adopted,
+    };
+    let oldIndex = pets.findIndex((x) => x.id == id);
     if (oldIndex < 0) {
-        res.status(404).send("Pet not found")
+        res.status(404).send("Pet not found");
     } else {
-        pets[oldIndex] = newPet
-        res.json(newPet)
+        pets[oldIndex] = newPet;
+        res.json(newPet);
     }
-    })
+});
+
+app.delete("/pets/:id", (req, res) => {
+    const id = req.params.id;
+    let oldIndex = pets.findIndex((x) => x.id == id);
+    if (oldIndex < 0) {
+        res.status(404).send("Pet not found");
+    } else {
+        pets.splice(oldIndex, 1)
+        res.json({deleted: true});
+    }
+    console.log(pets)
+});
 
 app.get("/hello-world", (req, res) => {
     res.send("Hello, World!");
