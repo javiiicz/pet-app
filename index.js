@@ -46,7 +46,20 @@ app.get("/", (req, res) => {
 });
 
 app.get("/pets", (req, res) => {
-    res.json(pets)
+    let petList = pets
+    res.json(petList)
+})
+
+app.get("/pets/:id", async (req, res) => {
+    const id = req.params.id
+    const pet = pets.find(x => x.id == id)
+    console.log(pet)
+    
+    if (!pet) {
+        res.status(404).send("Pet not found")
+    } else {
+        res.json(pet)
+    }
 })
 
 app.get("/hello-world", (req, res) => {
