@@ -50,8 +50,35 @@ app.get("/", (req, res) => {
         </html>`);
 });
 
-app.get("/pets", (req, res) => {
+app.get("/pets", (req, res, next) => {
+    let queries = req.query
+
     let petList = pets;
+
+    if (queries.type) {
+        petList = petList.filter(x => x.type === queries.type)
+    }
+
+    if (queries.sort) {
+        let sort = queries.sort
+        if (sort==="age") {
+            petList.sort((a,b) => {return a.age - b.age})
+        } else if (sort==="name") {
+            petList = petList.toSorted((a,b) => {return a.name.localeCompare(b.name)})
+        }
+    }
+
+    if (queries.adopted) {
+        console.log(petList)
+        petList = petList.filter(x => x.adopted === JSON.parse(queries.adopted))
+    }
+
+
+    if (petList.length === 0) {
+        next({message: "No pets to show", status: 404})
+        return
+    }
+    
     res.json(petList);
 });
 
