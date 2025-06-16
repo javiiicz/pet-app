@@ -81,6 +81,26 @@ app.post("/pets", (req, res) => {
     res.json(newPet)
 })
 
+app.put("/pets/:id", (req, res) => {
+    const id = req.params.id
+    let body = req.body
+    let newPet = {
+        id: uuidv4(),
+        name: body.name,
+        type: body.type,
+        age: body.age,
+        description: body.description,
+        adopted: body.adopted
+    }
+    let oldIndex = pets.findIndex(x => x.id == id)
+    if (oldIndex < 0) {
+        res.status(404).send("Pet not found")
+    } else {
+        pets[oldIndex] = newPet
+        res.json(newPet)
+    }
+    })
+
 app.get("/hello-world", (req, res) => {
     res.send("Hello, World!");
 });
