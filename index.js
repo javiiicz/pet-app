@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
+const { PrismaClient } = require('./generated/prisma')
+const prisma = new PrismaClient()
 
 require("dotenv").config();
 
@@ -9,33 +11,6 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-
-let pets = [
-    {
-        id: 1,
-        name: "Rex",
-        type: "dino",
-        age: 65,
-        description: "Age in billions of years",
-        adopted: true,
-    },
-    {
-        id: 2,
-        name: "Fido",
-        type: "dog",
-        age: 4,
-        description: "Do not let him outside",
-        adopted: false,
-    },
-    {
-        id: 3,
-        name: "Mouse",
-        type: "cat",
-        age: 6,
-        description: "Let her outside",
-        adopted: false,
-    },
-];
 
 app.get("/", (req, res) => {
     res.send(`
@@ -50,10 +25,10 @@ app.get("/", (req, res) => {
         </html>`);
 });
 
-app.get("/pets", (req, res, next) => {
+app.get("/pets", async (req, res, next) => {
     let queries = req.query
 
-    let petList = pets;
+    let petList = await prisma.pet.findMany();
 
     if (queries.type) {
         petList = petList.filter(x => x.type === queries.type)
@@ -84,7 +59,7 @@ app.get("/pets", (req, res, next) => {
 
 app.get("/pets/:id", async (req, res, next) => {
     const id = req.params.id;
-    const pet = pets.find((x) => x.id == id);
+    const pet = await prisma.pet.findUnique({where: {id: parseInt(id)}});
     console.log(pet);
 
     if (!pet) {
@@ -94,7 +69,7 @@ app.get("/pets/:id", async (req, res, next) => {
     }
 });
 
-app.post("/pets", (req, res, next) => {
+app.post("/pets", async (req, res, next) => {
     let body = req.body;
     let newPet = {
         id: uuidv4(),
@@ -108,11 +83,22 @@ app.post("/pets", (req, res, next) => {
         next({message: "The new pet is missing a name, type, age, or adopted state", status: 400})
         return
     }
-    pets.push(newPet);
-    res.json(newPet);
+
+    let {name, type, age, description, adopted} = newPet
+
+    const added = await prisma.pet.create({
+        data: {
+            name,
+            type,
+            age,
+            description,
+            adopted
+        }
+    })
+    res.json(added);
 });
 
-app.put("/pets/:id", (req, res) => {
+app.put("/pets/:id", async (req, res) => {
     const id = req.params.id;
     let body = req.body;
     let newPet = {
@@ -127,25 +113,29 @@ app.put("/pets/:id", (req, res) => {
         next({message: "The new pet is missing a name, type, age, or adopted state", status: 400})
         return
     }
-    let oldIndex = pets.findIndex((x) => x.id == id);
-    if (oldIndex < 0) {
-        next({message: "The pet with the specified ID does not exist", status: 404})
-    } else {
-        pets[oldIndex] = newPet;
-        res.json(newPet);
-    }
+    let {name, type, age, description, adopted} = newPet
+
+    const added = await prisma.pet.update({
+        where: {id: parseInt(id)},
+        data: {
+            name,
+            type,
+            age,
+            description,
+            adopted
+        }
+    })
+    res.send(added)
 });
 
-app.delete("/pets/:id", (req, res) => {
+app.delete("/pets/:id", async (req, res) => {
     const id = req.params.id;
-    let oldIndex = pets.findIndex((x) => x.id == id);
-    if (oldIndex < 0) {
-        next({message: "The pet with the specified ID does not exist", status: 404})
-    } else {
-        pets.splice(oldIndex, 1)
-        res.json({deleted: true});
-    }
-    console.log(pets)
+
+    const deleted = await prisma.pet.delete({
+        where: {id: parseInt(id)}
+    })
+
+    console.log(deleted)
 });
 
 app.get("/hello-world", (req, res) => {
